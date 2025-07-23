@@ -16,14 +16,15 @@ export async function POST(request: Request) {
   }
  
   try {
-
-    const users = await sql`SELECT id, username, password FROM users WHERE username = ${username}`;
+    const sqlStatement = `SELECT id, username, password FROM users WHERE username = ${username}`;
+    const users = await sql`${sqlStatement}`;
     const user = users[0];
 
     console.log(user);
     console.log(password);
     console.log(users);
-    console.log(sql);
+    console.log(process.env.POSTGRES_URL);
+    console.log(sqlStatement);
     console.log(username);
     
     if (!user) {
