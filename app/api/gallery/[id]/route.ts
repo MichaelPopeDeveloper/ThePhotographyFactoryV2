@@ -1,28 +1,29 @@
-import { createClient } from '@vercel/postgres';
+import postgres from 'postgres';
 import { NextResponse } from 'next/server';
+
+const sql = postgres(process.env.POSTGRES_URL!, {
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  // THIS IS INSECURE AND FOR DEVELOPMENT ONLY
-  // BYPASSES SSL CERTIFICATE VALIDATION
-  const client = createClient({
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
-  await client.connect();
   try {
-    const { rows: photos } = await client.sql`
+    const eventResult = await sql`
+      SELECT client_name, event_date FROM events WHERE shareable_link_id = ${params.id}
+    `;
+    const event = eventResult[0];
+
+    const photos = await sql`
       SELECT * FROM photos WHERE event_id = (
         SELECT id FROM events WHERE shareable_link_id = ${params.id}
       )
     `;
-    await client.end();
-    return NextResponse.json(photos);
+    return NextResponse.json({ event, photos });
   } catch (error) {
-    await client.end();
     console.error('Error fetching gallery:', error);
     return NextResponse.json({ message: 'Failed to fetch gallery' }, { status: 500 });
   }

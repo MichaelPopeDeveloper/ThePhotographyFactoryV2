@@ -3,28 +3,28 @@ import React from 'react';
 export function Gallery() {
   const images = [
     {
-      src: "https://picsum.photos/id/1018/1000/600",
-      alt: "A beautiful mountain landscape",
+      src: "/images/page-photos/CT3A8932.jpg",
+      alt: "A beautiful landscape",
     },
     {
-      src: "https://picsum.photos/id/1015/1000/600",
-      alt: "A serene lake surrounded by mountains",
+      src: "/images/page-photos/CT3A7854-2.jpg",
+      alt: "A vibrant city scene",
     },
     {
-      src: "https://picsum.photos/id/1019/1000/600",
-      alt: "A person walking on a path in the woods",
+      src: "/images/page-photos/CT3A6895.jpg",
+      alt: "An abstract composition",
     },
     {
-      src: "https://picsum.photos/id/1025/1000/600",
-      alt: "A majestic lion",
+      src: "/images/page-photos/CT3A0390-2.jpg",
+      alt: "A serene nature shot",
     },
     {
-      src: "https://picsum.photos/id/10/1000/600",
-      alt: "A stunning view of a valley",
+      src: "/images/page-photos/CT3A7938.jpg",
+      alt: "A dynamic action photo",
     },
     {
-      src: "https://picsum.photos/id/20/1000/600",
-      alt: "A field of vibrant flowers",
+      src: "/images/page-photos/CT3A0048-3.jpg",
+      alt: "A captivating architectural detail",
     },
   ];
 
@@ -45,19 +45,14 @@ export function Gallery() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="group relative"
+                className="group relative h-80"
               >
-                <div className="aspect-w-3 aspect-h-2 rounded-lg overflow-hidden">
+                <div className="w-full h-full rounded-lg overflow-hidden">
                   <img
                     src={image.src}
                     alt={image.alt}
                     className="w-full h-full object-center object-cover"
                   />
-                </div>
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-white text-lg font-semibold">
-                    {image.alt}
-                  </p>
                 </div>
               </div>
             ))}

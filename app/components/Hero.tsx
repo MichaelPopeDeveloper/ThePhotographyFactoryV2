@@ -6,13 +6,13 @@ export function Hero() {
       <div className="grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12">
         <div className="mr-auto place-self-center lg:col-span-7">
           <h1 className="max-w-2xl mb-4 text-4xl font-extrabold tracking-tight leading-none md:text-5xl xl:text-6xl text-text">
-            Transform Your Vision into Reality
+            Level Up Your Photography
           </h1>
           <p className="max-w-2xl mb-6 font-light text-text-secondary lg:mb-8 md:text-lg lg:text-xl">
-            From award-winning graphic design to innovative web development, our team is dedicated to bringing your ideas to life.
+            Premium photograpphy for all your needs. Create memories that last a lifetime.
           </p>
           <a
-            href="#"
+            href="#contact-section"
             className="inline-flex items-center justify-center px-5 py-3 mr-3 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300"
           >
             Book Now
@@ -29,17 +29,12 @@ export function Hero() {
               ></path>
             </svg>
           </a>
-          <a
-            href="#"
-            className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-text border border-border rounded-lg hover:bg-background-subtle focus:ring-4 focus:ring-gray-100"
-          >
-            Speak to Sales
-          </a>
         </div>
         <div className="hidden lg:mt-0 lg:col-span-5 lg:flex">
           <img
-            src="https://via.placeholder.com/500x500"
-            alt="mockup"
+            src="/images/page-photos/CT3A8792-4.jpg"
+            alt="A coach instructing a young basketball player"
+            className="rounded-lg shadow-xl"
           />
         </div>
       </div>

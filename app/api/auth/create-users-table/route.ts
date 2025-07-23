@@ -1,19 +1,17 @@
-import { createClient } from '@vercel/postgres';
+import postgres from 'postgres';
 import { NextResponse } from 'next/server';
  
 export const dynamic = 'force-dynamic';
 
+const sql = postgres(process.env.POSTGRES_URL!, {
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
 export async function GET(request: Request) {
-  // THIS IS INSECURE AND FOR DEVELOPMENT ONLY
-  // BYPASSES SSL CERTIFICATE VALIDATION
-  const client = createClient({
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
-  await client.connect();
   try {
-    await client.sql`
+    await sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
@@ -24,10 +22,9 @@ export async function GET(request: Request) {
     const result = {
       message: 'Users table created successfully',
     }
-    await client.end();
     return NextResponse.json({ result }, { status: 200 });
   } catch (error) {
-    await client.end();
+    console.error('Error creating users table:', error);
     return NextResponse.json({ error }, { status: 500 });
   }
 } 

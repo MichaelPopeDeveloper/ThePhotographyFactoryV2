@@ -35,6 +35,7 @@ export default function GalleryPage() {
           setPhotos(data.photos);
         })
         .catch(err => {
+          console.error(err);
           setError(err.message);
         })
         .finally(() => {
@@ -62,14 +63,14 @@ export default function GalleryPage() {
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {photos.map(photo => (
+        {photos?.map(photo => (
           <div key={photo.id} className="group relative">
             <div className="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden">
               <img src={photo.file_path} alt="Photo" className="w-full h-full object-center object-cover" />
             </div>
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <a
-                href={photo.file_path}
+                href={`/api/download?url=${encodeURIComponent(photo.file_path)}`}
                 download
                 className="text-white bg-primary-600 hover:bg-primary-700 px-4 py-2 rounded-md"
               >
