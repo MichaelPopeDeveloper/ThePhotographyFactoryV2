@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { createClient } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
@@ -10,10 +10,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { rows } = await sql`SELECT id, username, password FROM users WHERE username = ${username}`;
+    // THIS IS INSECURE AND FOR DEVELOPMENT ONLY
+    // bYXPASSES SSL CERTIFICATE VALIDATION
+    const client = createClient({
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    });
+    await client.connect();
+    const { rows } = await client.sql`SELECT id, username, password FROM users WHERE username = ${username}`;
     const user = rows[0];
 
     if (!user) {
+      await client.end();
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
@@ -21,8 +30,10 @@ export async function POST(request: Request) {
 
     if (isPasswordValid) {
       // In a real application, you would create a session/token here
+      await client.end();
       return NextResponse.json({ message: 'Login successful', userId: user.id });
     } else {
+      await client.end();
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
   } catch (err) {

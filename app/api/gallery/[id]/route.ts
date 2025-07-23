@@ -1,27 +1,29 @@
-import { sql } from '@vercel/postgres';
+import { createClient } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
-
-  if (!id) {
-    return NextResponse.json({ error: 'Gallery ID is required' }, { status: 400 });
-  }
-
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  // THIS IS INSECURE AND FOR DEVELOPMENT ONLY
+  // BYPASSES SSL CERTIFICATE VALIDATION
+  const client = createClient({
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
+  await client.connect();
   try {
-    const eventResult = await sql`SELECT * FROM events WHERE shareable_link_id = ${id}`;
-    const event = eventResult.rows[0];
-
-    if (!event) {
-      return NextResponse.json({ error: 'Gallery not found' }, { status: 404 });
-    }
-
-    const photosResult = await sql`SELECT * FROM photos WHERE event_id = ${event.id}`;
-    const photos = photosResult.rows;
-
-    return NextResponse.json({ event, photos });
+    const { rows: photos } = await client.sql`
+      SELECT * FROM photos WHERE event_id = (
+        SELECT id FROM events WHERE shareable_link_id = ${params.id}
+      )
+    `;
+    await client.end();
+    return NextResponse.json(photos);
   } catch (error) {
+    await client.end();
     console.error('Error fetching gallery:', error);
-    return NextResponse.json({ error: 'Failed to fetch gallery' }, { status: 500 });
+    return NextResponse.json({ message: 'Failed to fetch gallery' }, { status: 500 });
   }
 } 

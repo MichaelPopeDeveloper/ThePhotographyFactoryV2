@@ -1,6 +1,6 @@
 import { createClient } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
- 
+
 export async function GET(request: Request) {
   // THIS IS INSECURE AND FOR DEVELOPMENT ONLY
   // BYPASSES SSL CERTIFICATE VALIDATION
@@ -12,18 +12,15 @@ export async function GET(request: Request) {
   await client.connect();
   try {
     await client.sql`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS notes (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE
+        event_id INTEGER REFERENCES events(id),
+        note TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    const result = {
-      message: 'Users table created successfully',
-    }
     await client.end();
-    return NextResponse.json({ result }, { status: 200 });
+    return NextResponse.json({ message: 'Notes table created successfully' }, { status: 200 });
   } catch (error) {
     await client.end();
     return NextResponse.json({ error }, { status: 500 });
