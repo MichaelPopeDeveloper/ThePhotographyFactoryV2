@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   }
  
   try {
+
     const users = await sql`SELECT id, username, password FROM users WHERE username = ${username}`;
     const user = users[0];
 
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     console.log(password);
     console.log(users);
     console.log(sql);
+    console.log(username);
     
     if (!user) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
