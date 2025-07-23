@@ -1,6 +1,6 @@
 import React from 'react';
-import { EventCreator } from './EventCreator.tsx';
-import { EventList } from './EventList.tsx';
+import { EventCreator } from './EventCreator';
+import { EventList } from './EventList';
 
 export function Dashboard() {
   return (

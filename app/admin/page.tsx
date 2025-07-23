@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { AdminLogin } from '../components/AdminLogin.tsx';
-import { Dashboard } from '../components/Dashboard.tsx';
+import { AdminLogin } from '../components/AdminLogin';
+import { Dashboard } from '../components/Dashboard';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
