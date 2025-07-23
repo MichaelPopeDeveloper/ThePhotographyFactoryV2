@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { EmailTemplate } from '@/app/components/EmailTemplate';
+import { EmailTemplate } from '../../components/EmailTemplate.tsx';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'TDP Factory <noreply@yourdomain.com>',
+      from: 'TDP Factory <noreply@tdpfactory.com>',
       to: [email],
       subject: 'Thank you for your booking request!',
       react: EmailTemplate({ name, eventDate, eventType, notes })

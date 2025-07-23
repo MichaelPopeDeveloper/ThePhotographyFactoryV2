@@ -8,6 +8,8 @@ export function ContactForm() {
   const [eventDate, setEventDate] = useState('');
   const [eventType, setEventType] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'success' | 'error' | null>(null);
 
   const eventTypes = [
     'Wedding',
@@ -18,18 +20,36 @@ export function ContactForm() {
     'Other'
   ];
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setSubmissionStatus(null);
     const formData = { name, email, eventDate, eventType, notes };
-    console.log('Form submitted:', formData);
-    // Here you would typically send the data to a backend server
-    alert('Thank you for your booking request! We will get back to you shortly.');
-    // Reset form
-    setName('');
-    setEmail('');
-    setEventDate('');
-    setEventType('');
-    setNotes('');
+
+    try {
+      const response = await fetch('/api/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmissionStatus('success');
+        setName('');
+        setEmail('');
+        setEventDate('');
+        setEventType('');
+        setNotes('');
+      } else {
+        setSubmissionStatus('error');
+      }
+    } catch (error) {
+      setSubmissionStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -131,11 +151,22 @@ export function ContactForm() {
             <div className="mt-6 text-center">
               <button
                 type="submit"
-                className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300"
+                disabled={isSubmitting}
+                className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 disabled:opacity-50"
               >
-                Book Now
+                {isSubmitting ? 'Booking...' : 'Book Now'}
               </button>
             </div>
+            {submissionStatus === 'success' && (
+              <p className="mt-4 text-center text-green-600">
+                Thank you for your booking request! We will get back to you shortly.
+              </p>
+            )}
+            {submissionStatus === 'error' && (
+              <p className="mt-4 text-center text-red-600">
+                There was an error submitting your request. Please try again later.
+              </p>
+            )}
           </form>
         </div>
       </div>
