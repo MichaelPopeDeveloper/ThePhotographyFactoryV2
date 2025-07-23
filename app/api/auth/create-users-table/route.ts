@@ -4,10 +4,10 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const result = await sql`
-      CREATE TABLE photos (
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
-        event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
-        file_path VARCHAR(255) NOT NULL
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL
       );
     `;
     return NextResponse.json({ result }, { status: 200 });

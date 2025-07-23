@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { sql } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
@@ -9,11 +9,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
   }
 
-  const db = new Database("./backend/db/main.db", { verbose: console.log });
-
   try {
-    const stmt = db.prepare('SELECT id, username, password FROM users WHERE username = ?');
-    const user = stmt.get(username);
+    const { rows } = await sql`SELECT id, username, password FROM users WHERE username = ${username}`;
+    const user = rows[0];
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
@@ -30,7 +28,5 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("Login error:", err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    db.close();
   }
 } 

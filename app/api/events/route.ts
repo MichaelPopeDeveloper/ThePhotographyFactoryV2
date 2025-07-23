@@ -1,19 +1,11 @@
+import { sql } from '@vercel/postgres';
+import { put } from '@vercel/blob';
 import { NextResponse, NextRequest } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import Database from 'better-sqlite3';
 import crypto from 'crypto';
-import { Buffer } from 'node:buffer';
-
-const uploadDir = path.join(process.cwd(), 'public', 'images', 'content');
 
 export async function POST(request: NextRequest) {
   try {
-    // Ensure the upload directory exists
-    await fs.mkdir(uploadDir, { recursive: true });
-
     const formData = await request.formData();
-
     const clientName = formData.get('clientName') as string;
     const clientEmail = formData.get('clientEmail') as string;
     const eventDate = formData.get('eventDate') as string;
@@ -25,38 +17,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Client name and photos are required' }, { status: 400 });
     }
 
-    // Save files to the server
-    const savedPhotoPaths: string[] = [];
-    for (const photo of photos) {
-      if(photo.size === 0) continue; // Skip empty files
-      const buffer = Buffer.from(await photo.arrayBuffer());
-      const filename = `${Date.now()}-${photo.name}`;
-      const filepath = path.join(uploadDir, filename);
-      await fs.writeFile(filepath, buffer);
-      savedPhotoPaths.push(`/images/content/${filename}`);
-    }
-
-    if (savedPhotoPaths.length === 0) {
-        return NextResponse.json({ message: 'Valid photos are required' }, { status: 400 });
-    }
-
-    // Save event and photo paths to the database
-    const db = new Database('./backend/db/main.db');
     const shareable_link_id = crypto.randomBytes(16).toString('hex');
+    
+    // Insert event data and get the new event's ID
+    const eventResult = await sql`
+      INSERT INTO events (client_name, client_email, event_date, event_type, notes, shareable_link_id) 
+      VALUES (${clientName}, ${clientEmail}, ${eventDate}, ${eventType}, ${notes}, ${shareable_link_id})
+      RETURNING id;
+    `;
+    const eventId = eventResult.rows[0].id;
 
-    const eventStmt = db.prepare(
-      `INSERT INTO events (client_name, client_email, event_date, event_type, notes, shareable_link_id) 
-       VALUES (?, ?, ?, ?, ?, ?)`
-    );
-    const result = eventStmt.run(clientName, clientEmail, eventDate, eventType, notes, shareable_link_id);
-    const eventId = result.lastInsertRowid;
-
-    const photoStmt = db.prepare('INSERT INTO photos (event_id, file_path) VALUES (?, ?)');
-    for (const photoPath of savedPhotoPaths) {
-      photoStmt.run(eventId, photoPath);
+    // Upload photos and save their paths
+    for (const photo of photos) {
+      if (photo.size > 0) {
+        const blob = await put(photo.name, photo, { access: 'public' });
+        await sql`
+          INSERT INTO photos (event_id, file_path) 
+          VALUES (${eventId}, ${blob.url});
+        `;
+      }
     }
-
-    db.close();
 
     return NextResponse.json({
       message: 'Event created successfully',
@@ -70,11 +50,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const db = new Database('./backend/db/main.db');
-    const stmt = db.prepare('SELECT * FROM events ORDER BY event_date DESC');
-    const events = stmt.all();
-    db.close();
-
+    const { rows: events } = await sql`SELECT * FROM events ORDER BY event_date DESC`;
     return NextResponse.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
