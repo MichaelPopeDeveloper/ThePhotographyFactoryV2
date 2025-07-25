@@ -7,10 +7,6 @@ export function Gallery() {
       alt: "A beautiful landscape",
     },
     {
-      src: "/images/page-photos/CT3A7854-2.jpg",
-      alt: "A vibrant city scene",
-    },
-    {
       src: "/images/page-photos/CT3A6895.jpg",
       alt: "An abstract composition",
     },
