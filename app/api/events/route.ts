@@ -21,15 +21,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const clientName = formData.get('clientName') as string;
-    const clientEmail = formData.get('clientEmail') as string;
-    const eventDate = formData.get('eventDate') as string;
-    const eventType = formData.get('eventType') as string;
-    const notes = formData.get('notes') as string;
-    const photos = formData.getAll('photos') as File[];
+    const { clientName, clientEmail, eventDate, eventType, notes, photoUrls } = await request.json();
 
-    if (!clientName || photos.length === 0) {
+    if (!clientName || !photoUrls || photoUrls.length === 0) {
       return NextResponse.json({ message: 'Client name and photos are required' }, { status: 400 });
     }
 
@@ -43,18 +37,12 @@ export async function POST(request: NextRequest) {
     `;
     const eventId = eventResult[0].id;
 
-    // Upload photos and save their paths
-    for (const photo of photos) {
-      if (photo.size > 0) {
-        const blob = await put(photo.name, photo, {
-          access: 'public',
-          addRandomSuffix: true,
-        });
-        await sql`
-          INSERT INTO photos (event_id, file_path) 
-          VALUES (${eventId}, ${blob.url});
-        `;
-      }
+    // Save photo URLs
+    for (const url of photoUrls) {
+      await sql`
+        INSERT INTO photos (event_id, file_path) 
+        VALUES (${eventId}, ${url});
+      `;
     }
 
     return NextResponse.json({

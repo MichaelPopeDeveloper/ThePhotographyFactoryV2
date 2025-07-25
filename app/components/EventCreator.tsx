@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { type PutBlobResult } from '@vercel/blob';
 
 interface CreatedEvent {
   shareable_link_id: string;
@@ -15,38 +16,52 @@ export function EventCreator() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEvent, setCreatedEvent] = useState<CreatedEvent | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setUploading(true);
 
-    const formData = new FormData();
-    formData.append('clientName', clientName);
-    formData.append('clientEmail', clientEmail);
-    formData.append('eventDate', eventDate);
-    formData.append('eventType', eventType);
-    formData.append('notes', notes);
-    photos.forEach(photo => {
-      formData.append('photos', photo);
-    });
+    const uploadedPhotoUrls: string[] = [];
+    for (const photo of photos) {
+      const response = await fetch(`/api/upload?filename=${photo.name}`, {
+        method: 'POST',
+        body: photo,
+      });
+      const newBlob = (await response.json()) as PutBlobResult;
+      uploadedPhotoUrls.push(newBlob.url);
+    }
+
+    setUploading(false);
+
+    const eventData = {
+      clientName,
+      clientEmail,
+      eventDate,
+      eventType,
+      notes,
+      photoUrls: uploadedPhotoUrls,
+    };
 
     try {
       const response = await fetch('/api/events', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
       });
 
       if (response.ok) {
         const data = await response.json();
         setCreatedEvent(data.event);
-        // Reset form fields
         setClientName('');
         setClientEmail('');
         setEventDate('');
         setEventType('');
         setNotes('');
         setPhotos([]);
-        // Consider a more subtle notification than alert
       } else {
         const error = await response.json();
         alert(`Error creating event: ${error.message}`);
@@ -60,8 +75,8 @@ export function EventCreator() {
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.currentTarget.files) {
-      setPhotos(Array.from(e.currentTarget.files));
+    if (e.target.files) {
+      setPhotos(Array.from(e.target.files));
     }
   };
 
@@ -72,16 +87,16 @@ export function EventCreator() {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <input type="text" placeholder="Client Name" value={clientName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientName(e.currentTarget.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-          <input type="email" placeholder="Client Email" value={clientEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientEmail(e.currentTarget.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-          <input type="date" placeholder="Event Date" value={eventDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEventDate(e.currentTarget.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-          <input type="text" placeholder="Event Type (e.g., Wedding, Portrait)" value={eventType} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEventType(e.currentTarget.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+          <input type="text" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+          <input type="email" placeholder="Client Email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+          <input type="date" placeholder="Event Date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+          <input type="text" placeholder="Event Type (e.g., Wedding, Portrait)" value={eventType} onChange={(e) => setEventType(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
         </div>
         
         <textarea 
           placeholder="Add any relevant notes..." 
           value={notes} 
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.currentTarget.value)} 
+          onChange={(e) => setNotes(e.target.value)} 
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           rows={5}
         ></textarea>
@@ -106,14 +121,14 @@ export function EventCreator() {
           </div>
         </div>
         
-        <button type="submit" disabled={isSubmitting} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-lg">
+        <button type="submit" disabled={isSubmitting || uploading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-lg">
           {isSubmitting ? (
             <>
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Creating Event...
+              {uploading ? 'Uploading...' : 'Creating Event...'}
             </>
           ) : (
             'Create & Get Shareable Link'

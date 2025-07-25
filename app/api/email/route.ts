@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const { data, error } = await resend.emails.send({
       from: 'TDP Factory <noreply@tdpfactory.com>',
-      to: [email],
+      to: [email, "treyc3dash@gmail.com"],
       subject: 'Thank you for your booking request!',
       react: EmailTemplate({ name, eventDate, eventType, notes })
     });

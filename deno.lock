@@ -266,7 +266,9 @@
         "npm:postcss@^8.4.31",
         "npm:postgres@^3.4.7",
         "npm:react-dom@18.2.0",
+        "npm:react-email@^4.2.4",
         "npm:react@18.2.0",
+        "npm:resend@^4.7.0",
         "npm:tailwindcss@^3.3.0",
         "npm:typescript@5"
       ]
